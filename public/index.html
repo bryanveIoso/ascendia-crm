@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascendia CRM • Phil Labor • Node.js</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --purple: #7C3AED;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .glass {
+            background: rgba(30, 20, 55, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+
+        .nav-active {
+            background: rgba(124, 58, 237, 0.2);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+
+        .stat-card {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .crm-card {
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .crm-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .purple-gradient {
+            background: linear-gradient(135deg, #7C3AED, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .staff-row {
+            transition: background-color 0.1s ease;
+        }
+        
+        .staff-row:hover {
+            background-color: rgba(124, 58, 237, 0.08);
+        }
+
+        .kanban-column {
+            min-height: 400px;
+        }
+
+        .nav-item {
+            transition: all 0.1s ease;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(124, 58, 237, 0.1);
+        }
+
+        .modal {
+            animation: modalPop 0.2s ease forwards;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .data-table {
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .phil-logo {
+            background: linear-gradient(135deg, #7C3AED, #C026D3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .dashboard-bg {
+            background: radial-gradient(circle at 50% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="bg-[#0F0A1F] text-white">
+    <!-- Top Navigation -->
+    <nav class="bg-[#1A1433] border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto">
+            <div class="px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-x-8">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-11 h-11 bg-gradient-to-br from-[#7C3AED] to-[#C026D3] rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <span class="text-white text-3xl font-black tracking-tighter">P</span>
+                        </div>
+                        <div>
+                            <div class="font-display text-3xl font-bold tracking-tighter">PHIL LABOR</div>
+                            <div class="text-[10px] text-white/50 -mt-1 tracking-[2px]">ASCENDIA CRM</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Nav -->
+                    <div class="hidden md:flex items-center gap-x-1 text-sm">
+                        <a href="#" onclick="navigateTo('dashboard')" class="nav-item px-4 py-2 text-white/80 hover:text-white flex items-center gap-x-2 rounded-xl text-sm font-medium">
+                            <i class="fas fa-home w-4"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" onclick="navigateTo('staff')" class="nav-item px-4 py-2 text-white/80 hover:text-white flex items-center gap-x-2 rounded-xl text-sm font-medium">
+                            <i class="fas fa-users w-4"></i>
+                            <span>Virtual Staff</span>
+                        </a>
+                        <a href="#" onclick="navigateTo('clients')" class="nav-item px-4 py-2 text-white/80 hover:text-white flex items-center gap-x-2 rounded-xl text-sm font-medium">
+                            <i class="fas fa-building w-4"></i>
+                            <span>Clients</span>
+                        </a>
+                        <a href="#" onclick="navigateTo('tasks')" class="nav-item px-4 py-2 text-white/80 hover:text-white flex items-center gap-x-2 rounded-xl text-sm font-medium">
+                            <i class="fas fa-tasks w-4"></i>
+                            <span>Tasks</span>
+                        </a>
+                        <a href="#" onclick="navigateTo('recruitment')" class="nav-item px-4 py-2 text-white/80 hover:text-white flex items-center gap-x-2 rounded-xl text-sm font-medium">
+                            <i class="fas fa-user-plus w-4"></i>
+                            <span>Recruitment</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-4">
+                    <!-- AI Assistant -->
+                    <button onclick="openAIAssistant()" 
+                            class="flex items-center gap-x-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl text-sm transition-colors">
+                        <div class="w-6 h-6 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <span class="text-sm font-medium">Annie AI</span>
+                    </button>
+                    
+                    <!-- AU Owned -->
+                    <div class="flex items-center gap-x-2 px-4 py-1.5 bg-white/5 border border-white/20 rounded-2xl text-xs">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="font-semibold text-emerald-400">AU OWNED</span>
+                    </div>
+                    
+                    <!-- User -->
+                    <div class="flex items-center gap-x-3 pl-4 border-l border-white/10">
+                        <div class="text-right">
+                            <div class="text-sm font-semibold">Andrew Quartly</div>
+                            <div class="text-[10px] text-white/50">CEO • Admin</div>
+                        </div>
+                        <div class="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl overflow-hidden ring-2 ring-white/20">
+                            <img src="https://storage.googleapis.com/phillabor-crm-a8447.firebasestorage.app/avatars/ai-persona_1769427169977.png" alt="Andy" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    
+                    <button onclick="showInquireModal()" 
+                            class="px-6 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#C026D3] hover:brightness-110 transition-all text-white text-sm font-semibold rounded-2xl flex items-center gap-x-2 shadow-lg shadow-purple-500/40">
+                        <span>Inquire Now</span>
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-screen-2xl mx-auto flex">
+        <!-- Sidebar -->
+        <div class="w-72 bg-[#1A1433] border-r border-white/10 min-h-[calc(100vh-73px)] p-4 hidden lg:block">
+            <div class="px-3 mb-6">
+                <div class="text-xs font-semibold tracking-widest text-white/50 mb-3 px-3">MAIN</div>
+                
+                <div onclick="navigateTo('dashboard')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-chart-line w-5 text-[#7C3AED]"></i>
+                    <span class="font-medium">Overview</span>
+                </div>
+                <div onclick="navigateTo('staff')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-user-tie w-5"></i>
+                    <span class="font-medium">Virtual Staff (500+)</span>
+                </div>
+                <div onclick="navigateTo('clients')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-handshake w-5"></i>
+                    <span class="font-medium">Client Companies</span>
+                </div>
+                <div onclick="navigateTo('tasks')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-tasks w-5"></i>
+                    <span class="font-medium">Tasks & Time</span>
+                </div>
+            </div>
+            
+            <div class="px-3 mb-6">
+                <div class="text-xs font-semibold tracking-widest text-white/50 mb-3 px-3">OPERATIONS</div>
+                
+                <div onclick="navigateTo('recruitment')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-search w-5"></i>
+                    <span class="font-medium">Recruitment Pipeline</span>
+                </div>
+                <div onclick="navigateTo('comms')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-comments w-5"></i>
+                    <span class="font-medium">Team Chat & DMs</span>
+                </div>
+                <div onclick="navigateTo('support')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-headset w-5"></i>
+                    <span class="font-medium">Support Tickets</span>
+                </div>
+                <div onclick="navigateTo('training')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-graduation-cap w-5"></i>
+                    <span class="font-medium">Training & Compliance</span>
+                </div>
+            </div>
+            
+            <div class="px-3">
+                <div class="text-xs font-semibold tracking-widest text-white/50 mb-3 px-3">CONTENT & INSIGHTS</div>
+                
+                <div onclick="navigateTo('knowledge')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-book w-5"></i>
+                    <span class="font-medium">Knowledge Base</span>
+                </div>
+                <div onclick="navigateTo('website')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-globe w-5"></i>
+                    <span class="font-medium">Website CMS</span>
+                </div>
+                <div onclick="navigateTo('reports')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl mb-1">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Reports & Analytics</span>
+                </div>
+                <div onclick="navigateTo('settings')" class="nav-item flex items-center gap-x-3 px-4 py-3 text-white/90 hover:text-white cursor-pointer rounded-2xl">
+                    <i class="fas fa-cog w-5"></i>
+                    <span class="font-medium">System Settings</span>
+                </div>
+            </div>
+            
+            <div class="mt-auto pt-8 px-4">
+                <div class="glass rounded-3xl p-4 text-center">
+                    <div class="text-xs text-white/60 mb-1">NODE.JS BACKEND</div>
+                    <div class="flex items-center justify-center gap-x-2">
+                        <div class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-mono rounded-full flex items-center gap-x-1">
+                            <i class="fas fa-circle text-[8px]"></i>
+                            <span>CONNECTED</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-white/50 mt-2">Firebase • Firestore • Nextcloud</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 p-8 max-w-[1480px]">
+            
+            <!-- DASHBOARD SECTION -->
+            <div id="section-dashboard" class="section active">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <div class="uppercase tracking-[3px] text-xs text-white/50">WELCOME BACK, ANDY</div>
+                        <h1 class="font-display text-6xl font-bold tracking-tighter">Ascendia Dashboard</h1>
+                        <p class="text-white/70 mt-1">Phil Labor • Australian-Owned BPO • 07 May 2026</p>
+                    </div>
+                    <div class="flex items-center gap-x-4">
+                        <button onclick="refreshAllData()" class="px-5 py-2.5 flex items-center gap-x-2 text-sm bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl transition-colors">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Refresh Data</span>
+                        </button>
+                        <button onclick="exportReport()" class="px-6 py-2.5 bg-white text-[#0F0A1F] font-semibold text-sm rounded-2xl flex items-center gap-x-2 hover:bg-white/90 transition-all">
+                            <i class="fas fa-download"></i>
+                            <span>Export Report</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Hero Stats Row (matching screenshot) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass rounded-3xl p-6 stat-card">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-5xl font-bold metric-value">512</div>
+                                <div class="text-white/70 text-sm mt-1">Professionals Deployed</div>
+                            </div>
+                            <div class="w-14 h-14 bg-[#7C3AED]/20 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-users text-[#7C3AED] text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs flex items-center gap-x-1 text-emerald-400">
+                            <i class="fas fa-arrow-trend-up"></i>
+                            <span>+47 this month</span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-6 stat-card">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-5xl font-bold metric-value">98.4</div>
+                                <div class="text-white/70 text-sm mt-1">Client Retention Rate</div>
+                            </div>
+                            <div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-star text-emerald-400 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs flex items-center gap-x-1 text-emerald-400">
+                            <i class="fas fa-arrow-trend-up"></i>
+                            <span>+1.2% from last quarter</span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-6 stat-card">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-5xl font-bold">62</div>
+                                <div class="text-white/70 text-sm mt-1">Avg Cost Savings vs Local</div>
+                            </div>
+                            <div class="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-percentage text-amber-400 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-white/60">Range: 50–70%</div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-6 stat-card">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-5xl font-bold metric-value">14</div>
+                                <div class="text-white/70 text-sm mt-1">Avg Days to Launch</div>
+                            </div>
+                            <div class="w-14 h-14 bg-sky-500/20 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-clock text-sky-400 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs flex items-center gap-x-1 text-emerald-400">
+                            <i class="fas fa-arrow-trend-down"></i>
+                            <span>-3 days improvement</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Quick Actions -->
+                    <div class="lg:col-span-5 glass rounded-3xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="font-semibold text-xl">Quick Actions</div>
+                            <div class="text-xs px-3 py-1 bg-white/10 rounded-full">NODE.JS POWERED</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="deployNewStaff()" class="flex flex-col items-center justify-center gap-y-3 p-5 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/10 transition-all group">
+                                <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                                    <i class="fas fa-user-plus text-white text-2xl"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-semibold">Deploy New Staff</div>
+                                    <div class="text-xs text-white/60">Match & onboard</div>
+                                </div>
+                            </button>
+                            
+                            <button onclick="navigateTo('recruitment')" class="flex flex-col items-center justify-center gap-y-3 p-5 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/10 transition-all group">
+                                <div class="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                                    <i class="fas fa-search text-white text-2xl"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-semibold">Start Recruitment</div>
+                                    <div class="text-xs text-white/60">Top 1% talent</div>
+                                </div>
+                            </button>
+                            
+                            <button onclick="createNewTask()" class="flex flex-col items-center justify-center gap-y-3 p-5 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/10 transition-all group">
+                                <div class="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                                    <i class="fas fa-plus text-white text-2xl"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-semibold">Create Task</div>
+                                    <div class="text-xs text-white/60">Assign to team</div>
+                                </div>
+                            </button>
+                            
+                            <button onclick="openAIAssistant()" class="flex flex-col items-center justify-center gap-y-3 p-5 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/10 transition-all group">
+                                <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                                    <i class="fas fa-robot text-white text-2xl"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-semibold">Chat with Annie</div>
+                                    <div class="text-xs text-white/60">AI Operations Assistant</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="lg:col-span-7 glass rounded-3xl p-6">
+                        <div class="font-semibold text-xl mb-5 flex items-center justify-between">
+                            <span>Live Activity Feed</span>
+                            <span class="text-xs px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">REAL-TIME</span>
+                        </div>
+                        
+                        <div class="space-y-4 text-sm">
+                            <div class="flex gap-x-4">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 flex-shrink-0 flex items-center justify-center"><i class="fas fa-check text-emerald-400"></i></div>
+                                <div class="flex-1">
+                                    <div><span class="font-semibold">Maria Santos</span> completed <span class="text-white/80">"Q4 Compliance Audit"</span></div>
+                                    <div class="text-xs text-white/50">2 minutes ago • 4.2 hrs logged</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-x-4">
+                                <div class="w-8 h-8 rounded-xl bg-violet-500/20 flex-shrink-0 flex items-center justify-center"><i class="fas fa-user-plus text-violet-400"></i></div>
+                                <div class="flex-1">
+                                    <div>New staff <span class="font-semibold">Rafael Mendoza</span> deployed to <span class="text-white/80">TechForward AU</span></div>
+                                    <div class="text-xs text-white/50">18 minutes ago • Virtual Assistant • Manila</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-x-4">
+                                <div class="w-8 h-8 rounded-xl bg-amber-500/20 flex-shrink-0 flex items-center justify-center"><i class="fas fa-ticket-alt text-amber-400"></i></div>
+                                <div class="flex-1">
+                                    <div>Support ticket <span class="font-mono">#ST-4891</span> escalated to Level 2</div>
+                                    <div class="text-xs text-white/50">43 minutes ago • High priority • AU client</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Chart -->
+                    <div class="lg:col-span-12 glass rounded-3xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <div class="font-semibold text-xl">Deployment & Retention Trends</div>
+                                <div class="text-xs text-white/60">Last 6 months • Node.js + Firestore analytics</div>
+                            </div>
+                            <select class="bg-white/5 border border-white/20 text-sm rounded-xl px-4 py-2 text-white focus:outline-none" onchange="updateTrendChart(this.value)">
+                                <option value="deployment">Professionals Deployed</option>
+                                <option value="retention">Client Retention %</option>
+                                <option value="hours">Total Hours Logged</option>
+                            </select>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VIRTUAL STAFF SECTION -->
+            <div id="section-staff" class="section">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="font-display text-4xl font-bold tracking-tight">Virtual Staff Directory</h2>
+                        <p class="text-white/70">512 active professionals • Top 1% Filipino talent vetted</p>
+                    </div>
+                    <button onclick="deployNewStaff()" class="px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#C026D3] text-white font-semibold rounded-2xl flex items-center gap-x-3 text-sm shadow-xl shadow-purple-500/30">
+                        <i class="fas fa-plus"></i>
+                        <span>DEPLOY NEW STAFF</span>
+                    </button>
+                </div>
+                
+                <div class="glass rounded-3xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-white/10 flex items-center gap-x-4">
+                        <div class="flex-1 relative">
+                            <input type="text" id="staffSearch" placeholder="Search by name, role, skills..." 
+                                   class="w-full bg-white/5 border border-white/20 pl-10 py-3 rounded-2xl text-sm focus:outline-none focus:border-[#7C3AED]" onkeyup="filterStaff()">
+                            <i class="fas fa-search absolute left-4 top-4 text-white/50"></i>
+                        </div>
+                        <select id="roleFilter" onchange="filterStaff()" class="bg-white/5 border border-white/20 rounded-2xl px-4 py-3 text-sm">
+                            <option value="">All Roles</option>
+                            <option value="Virtual Assistant">Virtual Assistant</option>
+                            <option value="Software Developer">Software Developer</option>
+                            <option value="Accountant">Accountant</option>
+                            <option value="Marketing Specialist">Marketing Specialist</option>
+                            <option value="Customer Success">Customer Success</option>
+                        </select>
+                    </div>
+                    
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10 text-white/60 text-xs uppercase tracking-widest">
+                                <th class="px-6 py-4 text-left font-normal">Professional</th>
+                                <th class="px-6 py-4 text-left font-normal">Role</th>
+                                <th class="px-6 py-4 text-left font-normal">Client</th>
+                                <th class="px-6 py-4 text-left font-normal">Status</th>
+                                <th class="px-6 py-4 text-left font-normal">Hours (MTD)</th>
+                                <th class="px-6 py-4 text-left font-normal">Deployed</th>
+                                <th class="px-6 py-4 text-right font-normal">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody" class="divide-y divide-white/10">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- CLIENTS SECTION -->
+            <div id="section-clients" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-2">Client Companies</h2>
+                <p class="text-white/70 mb-6">42 active Australian enterprises • Long-term partnership focus</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="clientsGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- TASKS SECTION -->
+            <div id="section-tasks" class="section">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="font-display text-4xl font-bold tracking-tight">Tasks & Time Tracking</h2>
+                        <p class="text-white/70">1,284 active tasks • 42,891 hours logged this month</p>
+                    </div>
+                    <button onclick="createNewTask()" class="px-5 py-2.5 bg-white text-[#0F0A1F] font-semibold rounded-2xl text-sm flex items-center gap-x-2">
+                        <i class="fas fa-plus"></i> New Task
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Kanban -->
+                    <div class="glass rounded-3xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="font-semibold flex items-center gap-x-2"><i class="fas fa-list-check text-rose-400"></i> <span>TO DO</span></div>
+                            <div class="px-3 py-px text-xs bg-white/10 rounded-full" id="todoCount">42</div>
+                        </div>
+                        <div id="kanban-todo" class="kanban-column space-y-3" ondrop="dropTask(event, 'todo')" ondragover="allowDrop(event)"></div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="font-semibold flex items-center gap-x-2"><i class="fas fa-spinner text-amber-400"></i> <span>IN PROGRESS</span></div>
+                            <div class="px-3 py-px text-xs bg-white/10 rounded-full" id="progressCount">67</div>
+                        </div>
+                        <div id="kanban-progress" class="kanban-column space-y-3" ondrop="dropTask(event, 'progress')" ondragover="allowDrop(event)"></div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="font-semibold flex items-center gap-x-2"><i class="fas fa-check-circle text-emerald-400"></i> <span>DONE</span></div>
+                            <div class="px-3 py-px text-xs bg-white/10 rounded-full" id="doneCount">189</div>
+                        </div>
+                        <div id="kanban-done" class="kanban-column space-y-3" ondrop="dropTask(event, 'done')" ondragover="allowDrop(event)"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RECRUITMENT SECTION -->
+            <div id="section-recruitment" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Recruitment Pipeline</h2>
+                
+                <div class="glass rounded-3xl p-6 mb-6">
+                    <div class="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                            <div class="text-4xl font-bold text-rose-400">187</div>
+                            <div class="text-xs text-white/60">NEW APPLICATIONS</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold text-amber-400">64</div>
+                            <div class="text-xs text-white/60">SHORTLISTED</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold text-sky-400">29</div>
+                            <div class="text-xs text-white/60">INTERVIEW STAGE</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold text-emerald-400">18</div>
+                            <div class="text-xs text-white/60">HIRED THIS MONTH</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-3xl overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-white/5">
+                            <tr class="text-xs uppercase text-white/60 tracking-widest">
+                                <th class="px-6 py-4 text-left">Applicant</th>
+                                <th class="px-6 py-4 text-left">Position</th>
+                                <th class="px-6 py-4 text-left">Skills Match</th>
+                                <th class="px-6 py-4 text-left">Stage</th>
+                                <th class="px-6 py-4 text-left">Applied</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="recruitmentTable" class="text-sm divide-y divide-white/10"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- COMMS SECTION -->
+            <div id="section-comms" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Communications Hub</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Team Chat -->
+                    <div class="glass rounded-3xl overflow-hidden flex flex-col h-[520px]">
+                        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+                            <div class="font-semibold flex items-center gap-x-2"><i class="fas fa-users text-purple-400"></i> Team Chat • Marketing Squad</div>
+                            <div class="text-xs px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">12 online</div>
+                        </div>
+                        <div class="flex-1 p-4 overflow-y-auto text-sm space-y-4" id="teamChatMessages">
+                            <!-- Messages populated by JS -->
+                        </div>
+                        <div class="p-4 border-t border-white/10">
+                            <div class="flex gap-x-2">
+                                <input type="text" id="teamChatInput" placeholder="Message the team..." class="flex-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none" onkeypress="if (event.key === 'Enter') sendTeamMessage()">
+                                <button onclick="sendTeamMessage()" class="px-5 bg-[#7C3AED] rounded-2xl text-sm font-semibold">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DMs -->
+                    <div class="glass rounded-3xl overflow-hidden flex flex-col h-[520px]">
+                        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+                            <div class="font-semibold">Direct Messages</div>
+                            <button onclick="startNewDM()" class="text-xs px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-2xl">New DM</button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4" id="dmList">
+                            <!-- DM list populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SUPPORT SECTION -->
+            <div id="section-support" class="section">
+                <div class="flex justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-4xl font-bold tracking-tight">Support Tickets</h2>
+                        <p class="text-white/70">47 open • 12 high priority</p>
+                    </div>
+                    <button onclick="createSupportTicket()" class="px-5 py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl text-sm font-semibold flex items-center gap-x-2">
+                        <i class="fas fa-plus"></i> New Ticket
+                    </button>
+                </div>
+                
+                <div class="glass rounded-3xl overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10 text-xs uppercase tracking-widest text-white/60">
+                                <th class="px-6 py-4 text-left">Ticket</th>
+                                <th class="px-6 py-4 text-left">Client</th>
+                                <th class="px-6 py-4 text-left">Subject</th>
+                                <th class="px-6 py-4 text-left">Priority</th>
+                                <th class="px-6 py-4 text-left">Assigned To</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="supportTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- TRAINING SECTION -->
+            <div id="section-training" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Training & Compliance</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass rounded-3xl p-6">
+                        <div class="font-semibold mb-4 flex items-center gap-x-2"><i class="fas fa-graduation-cap text-emerald-400"></i> Active Courses</div>
+                        <div class="text-6xl font-bold mb-1">24</div>
+                        <div class="text-sm text-white/60">8,942 completions this quarter</div>
+                        
+                        <div class="mt-6 space-y-3 text-sm">
+                            <div class="flex justify-between"><span>ISO 27001 Security</span><span class="font-mono text-emerald-400">94%</span></div>
+                            <div class="flex justify-between"><span>AU Data Protection</span><span class="font-mono text-emerald-400">88%</span></div>
+                            <div class="flex justify-between"><span>Phil Labor Standards</span><span class="font-mono text-emerald-400">97%</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-3xl p-6 col-span-2">
+                        <div class="font-semibold mb-4">Recent Completions</div>
+                        <div class="space-y-3 text-sm" id="recentTraining"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KNOWLEDGE BASE -->
+            <div id="section-knowledge" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Knowledge Base</h2>
+                <div class="glass rounded-3xl p-6">
+                    <div class="mb-4 flex gap-x-3">
+                        <input type="text" placeholder="Search articles, SOPs, templates..." class="flex-1 bg-white/5 border border-white/20 rounded-2xl px-5 py-3 text-sm" id="kbSearch" onkeyup="filterKnowledge()">
+                        <button class="px-6 py-3 bg-white/10 rounded-2xl text-sm font-semibold">Search</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="knowledgeGrid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- WEBSITE CMS -->
+            <div id="section-website" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Website Content Management</h2>
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-sm text-white/60 mb-4">Live site: <span class="text-emerald-400 font-mono">phillabor.com.au</span></div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border border-white/10 rounded-2xl p-4">
+                            <div class="font-semibold mb-3">Pages (18)</div>
+                            <div class="text-xs space-y-2 text-white/80">
+                                <div class="flex justify-between"><span>Home / Hero</span><span class="text-emerald-400">Live</span></div>
+                                <div class="flex justify-between"><span>Services</span><span class="text-emerald-400">Live</span></div>
+                                <div class="flex justify-between"><span>Success Stories</span><span class="text-emerald-400">Live</span></div>
+                                <div class="flex justify-between"><span>Virtual Staff</span><span class="text-amber-400">Draft</span></div>
+                            </div>
+                        </div>
+                        <div class="border border-white/10 rounded-2xl p-4">
+                            <div class="font-semibold mb-3">Recent Edits</div>
+                            <div class="text-xs space-y-2">
+                                <div>Hero copy updated by <span class="font-semibold">Marketing Team</span> • 2h ago</div>
+                                <div>New case study added • 1d ago</div>
+                            </div>
+                            <button onclick="editWebsitePage()" class="mt-4 text-xs px-4 py-2 bg-white/10 rounded-xl">Open CMS Editor</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- REPORTS -->
+            <div id="section-reports" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">Analytics & Reports</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass rounded-3xl p-6">
+                        <div class="font-semibold mb-4">Cost Savings Breakdown</div>
+                        <canvas id="savingsChart" height="140"></canvas>
+                    </div>
+                    <div class="glass rounded-3xl p-6">
+                        <div class="font-semibold mb-4">Staff Utilization</div>
+                        <canvas id="utilizationChart" height="140"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mt-6 glass rounded-3xl p-6 text-sm">
+                    <div class="font-semibold mb-4">Key Metrics Export</div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="exportReport('pdf')" class="px-5 py-2 bg-white/10 rounded-2xl text-xs flex items-center gap-x-2"><i class="fas fa-file-pdf"></i> PDF Report</button>
+                        <button onclick="exportReport('csv')" class="px-5 py-2 bg-white/10 rounded-2xl text-xs flex items-center gap-x-2"><i class="fas fa-file-csv"></i> CSV Export</button>
+                        <button onclick="exportReport('json')" class="px-5 py-2 bg-white/10 rounded-2xl text-xs flex items-center gap-x-2"><i class="fas fa-file-code"></i> Firestore JSON</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SETTINGS -->
+            <div id="section-settings" class="section">
+                <h2 class="font-display text-4xl font-bold tracking-tight mb-6">System Settings</h2>
+                
+                <div class="glass rounded-3xl p-8 max-w-3xl">
+                    <div class="space-y-8">
+                        <div>
+                            <div class="font-semibold mb-2">AI Persona (Annie)</div>
+                            <div class="flex items-center gap-x-4">
+                                <div class="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-purple-500/50">
+                                    <img src="https://storage.googleapis.com/phillabor-crm-a8447.firebasestorage.app/avatars/ai-persona_1769427169977.png" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <div class="font-medium">Annie • Australian English (Neural2-C)</div>
+                                    <div class="text-xs text-white/60">TTS Speed: 1.1x • Welcome: "G'day, can I help?"</div>
+                                    <button onclick="editAIPersona()" class="text-xs text-purple-400 mt-1">Edit Persona & Triggers</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <div class="font-semibold text-sm mb-2">Default Payment Terms</div>
+                                <div class="px-4 py-3 bg-white/5 rounded-2xl text-sm">DUE_ON_RECEIPT</div>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-sm mb-2">AI Daily Limit (per user)</div>
+                                <div class="px-4 py-3 bg-white/5 rounded-2xl text-sm">100 requests</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="font-semibold mb-3">Connected Services</div>
+                            <div class="flex flex-wrap gap-2">
+                                <div class="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-center gap-x-1.5"><i class="fas fa-check"></i> Firebase</div>
+                                <div class="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-center gap-x-1.5"><i class="fas fa-check"></i> Firestore</div>
+                                <div class="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-center gap-x-1.5"><i class="fas fa-check"></i> Nextcloud</div>
+                                <div class="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-2xl flex items-center gap-x-1.5"><i class="fas fa-check"></i> Trackabi</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100]" onclick="if (event.target.id === 'modal') closeModal()">
+        <div onclick="event.stopImmediatePropagation()" class="modal glass rounded-3xl w-full max-w-lg p-8">
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent-purple', '#7C3AED');
+        }
+        
+        // Sample Data (inferred from Firestore exports + realistic for Phil Labor)
+        let staffData = [
+            { id: "0DXtFgMyqHVAhsjy9bLABWx1sxw2", name: "Andrew Quartly", role: "CEO / Admin", status: "Internal", company: "Phil Labor HQ", avatar: "https://storage.googleapis.com/phillabor-crm-a8447.firebasestorage.app/avatars/ai-persona_1769427169977.png", skills: ["Leadership", "Strategy", "Compliance"], deployed: "Dec 2025", hours: 184, email: "andrew.quartly@phillabor.com" },
+            { id: "YdF6OPlMRGX9P1YOjXnTRTazAtj2", name: "Leonard Cruz", role: "Virtual Assistant", status: "Deployed", company: "TechForward AU", avatar: "https://i.pravatar.cc/40?img=12", skills: ["Admin", "Email Management", "Scheduling"], deployed: "Jan 2026", hours: 142, email: "leonard@phillabor.com" },
+            { id: "NABtIbxQO8NSuB2yf4cTA5fyqIT2", name: "Axel Rivera", role: "Marketing Specialist", status: "Deployed", company: "GrowthLab Sydney", avatar: "https://i.pravatar.cc/40?img=28", skills: ["SEO", "Content", "Social Media"], deployed: "Feb 2026", hours: 118, email: "axel@phillabor.com" },
+            { id: "staff-003", name: "Maria Santos", role: "Accountant", status: "Deployed", company: "FinanceHub AU", avatar: "https://i.pravatar.cc/40?img=47", skills: ["Xero", "MYOB", "Tax"], deployed: "Nov 2025", hours: 156, email: "maria@phillabor.com" },
+            { id: "staff-004", name: "Rafael Mendoza", role: "Software Developer", status: "Available", company: "—", avatar: "https://i.pravatar.cc/40?img=15", skills: ["Node.js", "React", "Firebase"], deployed: "—", hours: 0, email: "rafael@phillabor.com" },
+            { id: "staff-005", name: "Isabella Torres", role: "Customer Success", status: "Deployed", company: "RetailMax AU", avatar: "https://i.pravatar.cc/40?img=32", skills: ["Zendesk", "Onboarding", "Retention"], deployed: "Jan 2026", hours: 97, email: "isabella@phillabor.com" }
+        ];
+        
+        let clientsData = [
+            { id: "EW6FPNaGkWq4V134SPkd", name: "TechForward Australia", industry: "SaaS", staff: 8, savings: "64%", since: "2024", contact: "jess@techforward.com.au" },
+            { id: "client-002", name: "GrowthLab Sydney", industry: "Marketing Agency", staff: 4, savings: "58%", since: "2025", contact: "ops@growthlab.com.au" },
+            { id: "client-003", name: "FinanceHub AU", industry: "Financial Services", staff: 12, savings: "71%", since: "2023", contact: "compliance@financehub.au" },
+            { id: "client-004", name: "RetailMax Australia", industry: "E-commerce", staff: 6, savings: "55%", since: "2025", contact: "team@retailmax.com.au" }
+        ];
+        
+        let tasksData = [
+            { id: "02MB83aBH02xTTuaiX4C", title: "Check Emails and Messages", assignedTo: "Leonard Cruz", status: "todo", priority: "medium", hours: 3, company: "TechForward AU" },
+            { id: "0D8gBVTt9E0lO3ZTp9bA", title: "Marketing Strategy Draft", assignedTo: "Axel Rivera", status: "progress", priority: "high", hours: 8, company: "GrowthLab Sydney" },
+            { id: "task-003", title: "Q4 Compliance Review", assignedTo: "Maria Santos", status: "done", priority: "high", hours: 12, company: "FinanceHub AU" },
+            { id: "task-004", title: "Client Onboarding Guide", assignedTo: "Isabella Torres", status: "progress", priority: "medium", hours: 5, company: "RetailMax AU" }
+        ];
+        
+        let ticketsData = [
+            { id: "ST-4891", client: "TechForward AU", subject: "Integration issue with Xero", priority: "high", assigned: "Leonard Cruz", status: "open", created: "2h ago" },
+            { id: "ST-4890", client: "GrowthLab Sydney", subject: "New campaign brief", priority: "medium", assigned: "Axel Rivera", status: "in-progress", created: "1d ago" }
+        ];
+        
+        let recruitmentData = [
+            { id: "app-101", name: "Sofia Reyes", position: "Senior Virtual Assistant", match: "94%", stage: "Interview", applied: "3d ago" },
+            { id: "app-102", name: "Diego Morales", position: "Full-Stack Developer", match: "88%", stage: "Shortlisted", applied: "1w ago" }
+        ];
+        
+        // Initialize everything
+        function initializeDashboard() {
+            initializeTailwind();
+            populateStaffTable();
+            populateClientsGrid();
+            populateKanban();
+            populateRecruitmentTable();
+            populateSupportTable();
+            populateTeamChat();
+            populateDMList();
+            populateKnowledgeBase();
+            populateRecentTraining();
+            initializeCharts();
+            
+            // Show dashboard by default
+            document.getElementById('section-dashboard').classList.add('active');
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.metaKey && e.key === "/") {
+                    e.preventDefault();
+                    const search = document.getElementById('staffSearch');
+                    if (search) search.focus();
+                }
+            });
+            
+            // Fake live updates every 45 seconds
+            setInterval(() => {
+                if (document.getElementById('section-dashboard').classList.contains('active')) {
+                    showToast("Live update: New task completed by Maria Santos");
+                }
+            }, 45000);
+            
+            console.log('%c[Ascendia CRM] Full Node.js-powered dashboard initialized', 'color:#7C3AED');
+        }
+        
+        function navigateTo(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            // Show target
+            const target = document.getElementById('section-' + section);
+            if (target) {
+                target.classList.add('active');
+            }
+            
+            // Special actions
+            if (section === 'staff') populateStaffTable();
+            if (section === 'clients') populateClientsGrid();
+            if (section === 'tasks') populateKanban();
+            if (section === 'recruitment') populateRecruitmentTable();
+            if (section === 'support') populateSupportTable();
+        }
+        
+        function filterStaff() {
+            const search = document.getElementById('staffSearch').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value;
+            
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+            
+            staffData.filter(s => {
+                const matchesSearch = s.name.toLowerCase().includes(search) || 
+                                     s.role.toLowerCase().includes(search) || 
+                                     s.skills.join(' ').toLowerCase().includes(search);
+                const matchesRole = !roleFilter || s.role === roleFilter;
+                return matchesSearch && matchesRole;
+            }).forEach(staff => {
+                const row = createStaffRow(staff);
+                tbody.appendChild(row);
+            });
+        }
+        
+        function createStaffRow(staff) {
+            const row = document.createElement('tr');
+            row.className = `staff-row cursor-pointer`;
+            row.innerHTML = `
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-x-3">
+                        <img src="${staff.avatar}" class="w-9 h-9 rounded-2xl object-cover ring-1 ring-white/20" alt="">
+                        <div>
+                            <div class="font-semibold">${staff.name}</div>
+                            <div class="text-xs text-white/50">${staff.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="font-medium">${staff.role}</div>
+                    <div class="text-xs text-white/50">${staff.skills.slice(0,2).join(' • ')}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-white/80">${staff.company}</td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 text-xs rounded-full ${staff.status === 'Deployed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/70'}">
+                        ${staff.status}
+                    </span>
+                </td>
+                <td class="px-6 py-4 font-mono text-sm">${staff.hours} hrs</td>
+                <td class="px-6 py-4 text-xs text-white/60">${staff.deployed}</td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="viewStaffProfile('${staff.id}'); event.stopImmediatePropagation();" class="px-4 py-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-xl">View</button>
+                    <button onclick="messageStaff('${staff.id}'); event.stopImmediatePropagation();" class="px-4 py-1.5 text-xs bg-[#7C3AED]/80 hover:bg-[#7C3AED] rounded-xl ml-1">Message</button>
+                </td>
+            `;
+            row.onclick = () => viewStaffProfile(staff.id);
+            return row;
+        }
+        
+        function populateStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+            staffData.forEach(staff => {
+                tbody.appendChild(createStaffRow(staff));
+            });
+        }
+        
+        function populateClientsGrid() {
+            const container = document.getElementById('clientsGrid');
+            container.innerHTML = '';
+            
+            clientsData.forEach(client => {
+                const card = document.createElement('div');
+                card.className = `glass rounded-3xl p-6 crm-card cursor-pointer`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-semibold text-xl">${client.name}</div>
+                            <div class="text-xs text-white/60">${client.industry} • Since ${client.since}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-emerald-400">${client.savings}</div>
+                            <div class="text-xs -mt-1 text-white/60">savings</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex items-center justify-between text-sm">
+                        <div>
+                            <span class="font-mono text-lg font-semibold">${client.staff}</span>
+                            <span class="text-xs text-white/60"> staff deployed</span>
+                        </div>
+                        <button onclick="viewClient('${client.id}'); event.stopImmediatePropagation()" class="px-4 py-1 text-xs border border-white/30 hover:bg-white/5 rounded-2xl">Manage</button>
+                    </div>
+                `;
+                card.onclick = () => viewClient(client.id);
+                container.appendChild(card);
+            });
+        }
+        
+        function populateKanban() {
+            const todo = document.getElementById('kanban-todo');
+            const progress = document.getElementById('kanban-progress');
+            const done = document.getElementById('kanban-done');
+            
+            todo.innerHTML = '';
+            progress.innerHTML = '';
+            done.innerHTML = '';
+            
+            let todoCount = 0, progressCount = 0, doneCount = 0;
+            
+            tasksData.forEach(task => {
+                const card = document.createElement('div');
+                card.className = `bg-white/5 border border-white/10 rounded-2xl p-4 text-sm cursor-grab active:cursor-grabbing`;
+                card.draggable = true;
+                card.ondragstart = (e) => dragTask(e, task.id);
+                
+                card.innerHTML = `
+                    <div class="font-semibold mb-1">${task.title}</div>
+                    <div class="text-xs text-white/70">${task.assignedTo} • ${task.company}</div>
+                    <div class="flex items-center justify-between mt-3">
+                        <div class="text-[10px] px-2.5 py-px rounded ${task.priority === 'high' ? 'bg-rose-500/30 text-rose-400' : 'bg-white/10'}">${task.priority}</div>
+                        <div class="font-mono text-xs">${task.hours}h</div>
+                    </div>
+                `;
+                
+                if (task.status === 'todo') { todo.appendChild(card); todoCount++; }
+                else if (task.status === 'progress') { progress.appendChild(card); progressCount++; }
+                else { done.appendChild(card); doneCount++; }
+            });
+            
+            document.getElementById('todoCount').innerText = todoCount;
+            document.getElementById('progressCount').innerText = progressCount;
+            document.getElementById('doneCount').innerText = doneCount;
+        }
+        
+        function dragTask(e, taskId) {
+            e.dataTransfer.setData("text/plain", taskId);
+        }
+        
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+        
+        function dropTask(e, newStatus) {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData("text/plain");
+            
+            const task = tasksData.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                populateKanban();
+                showToast(`Task moved to ${newStatus.toUpperCase()}`);
+            }
+        }
+        
+        function populateRecruitmentTable() {
+            const tbody = document.getElementById('recruitmentTable');
+            tbody.innerHTML = '';
+            
+            recruitmentData.forEach(app => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-white/5';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-semibold">${app.name}</td>
+                    <td class="px-6 py-4">${app.position}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-x-2">
+                            <div class="flex-1 bg-white/10 h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: ${app.match}"></div></div>
+                            <span class="font-mono text-xs">${app.match}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400">${app.stage}</span></td>
+                    <td class="px-6 py-4 text-xs text-white/60">${app.applied}</td>
+                    <td class="px-6 py-4 text-right"><button onclick="advanceApplicant('${app.id}')" class="text-xs px-4 py-1.5 bg-white/10 rounded-xl">Advance</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function populateSupportTable() {
+            const tbody = document.getElementById('supportTableBody');
+            tbody.innerHTML = '';
+            
+            ticketsData.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-xs">${ticket.id}</td>
+                    <td class="px-6 py-4">${ticket.client}</td>
+                    <td class="px-6 py-4">${ticket.subject}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-px text-xs rounded ${ticket.priority === 'high' ? 'bg-rose-500/30 text-rose-400' : 'bg-amber-500/30 text-amber-400'}">${ticket.priority}</span></td>
+                    <td class="px-6 py-4 text-sm">${ticket.assigned}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs rounded-full ${ticket.status === 'open' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">${ticket.status}</span></td>
+                    <td class="px-6 py-4 text-right"><button onclick="viewTicket('${ticket.id}')" class="text-xs px-3 py-1 bg-white/10 rounded">View</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function populateTeamChat() {
+            const container = document.getElementById('teamChatMessages');
+            container.innerHTML = `
+                <div class="flex gap-x-3">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex-shrink-0"></div>
+                    <div>
+                        <div class="text-xs"><span class="font-semibold">Annie AI</span> <span class="text-white/50">• now</span></div>
+                        <div class="text-sm bg-white/5 px-4 py-2 rounded-2xl mt-1 max-w-[260px]">G'day team! Just pushed the new marketing brief to the shared drive. Let me know if you need anything clarified.</div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-x-3 justify-end">
+                    <div class="max-w-[240px]">
+                        <div class="text-xs text-right"><span class="font-semibold">Axel</span> <span class="text-white/50">• 14m</span></div>
+                        <div class="bg-[#7C3AED] px-4 py-2 rounded-2xl mt-1 text-sm">Thanks Annie! Looks perfect.</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function sendTeamMessage() {
+            const input = document.getElementById('teamChatInput');
+            if (!input.value.trim()) return;
+            
+            const container = document.getElementById('teamChatMessages');
+            const msg = document.createElement('div');
+            msg.className = `flex gap-x-3 justify-end`;
+            msg.innerHTML = `
+                <div class="max-w-[240px]">
+                    <div class="text-xs text-right"><span class="font-semibold">You</span> <span class="text-white/50">• now</span></div>
+                    <div class="bg-[#7C3AED] px-4 py-2 rounded-2xl mt-1 text-sm">${input.value}</div>
+                </div>
+            `;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+        }
+        
+        function populateDMList() {
+            const container = document.getElementById('dmList');
+            container.innerHTML = `
+                <div onclick="openDMChat('Leonard Cruz')" class="flex items-center gap-x-3 p-3 hover:bg-white/5 rounded-2xl cursor-pointer mb-1">
+                    <img src="https://i.pravatar.cc/40?img=12" class="w-9 h-9 rounded-2xl">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between"><span class="font-semibold">Leonard Cruz</span> <span class="text-xs text-white/50">2m</span></div>
+                        <div class="text-xs text-white/60 truncate">The Q4 report is ready for review</div>
+                    </div>
+                </div>
+                <div onclick="openDMChat('Maria Santos')" class="flex items-center gap-x-3 p-3 hover:bg-white/5 rounded-2xl cursor-pointer">
+                    <img src="https://i.pravatar.cc/40?img=47" class="w-9 h-9 rounded-2xl">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between"><span class="font-semibold">Maria Santos</span> <span class="text-xs text-white/50">1d</span></div>
+                        <div class="text-xs text-white/60 truncate">Compliance training completed ✓</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function startNewDM() {
+            const name = prompt("Enter staff name for new DM:");
+            if (name) openDMChat(name);
+        }
+        
+        function openDMChat(name) {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <div class="font-semibold text-xl">DM with ${name}</div>
+                    <button onclick="closeModal()" class="text-white/50 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                
+                <div class="h-80 bg-white/5 rounded-2xl p-4 overflow-y-auto mb-4 text-sm" id="dmChatWindow">
+                    <div class="text-center text-xs text-white/50 mb-6">Secure end-to-end encrypted • Node.js + Firebase</div>
+                    
+                    <div class="mb-3">
+                        <div class="text-xs text-white/50">Maria • 10:41am</div>
+                        <div class="inline-block bg-white/10 px-4 py-2 rounded-3xl">Hey, can you review the latest expense report?</div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-x-2">
+                    <input type="text" id="dmInput" placeholder="Type a message..." class="flex-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3 text-sm" onkeypress="if(event.key==='Enter') sendDMMessage('${name}')">
+                    <button onclick="sendDMMessage('${name}')" class="px-6 bg-[#7C3AED] text-white rounded-2xl font-semibold">Send</button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function sendDMMessage(name) {
+            const input = document.getElementById('dmInput');
+            if (!input || !input.value.trim()) return;
+            
+            const window = document.getElementById('dmChatWindow');
+            const msg = document.createElement('div');
+            msg.className = 'text-right mb-3';
+            msg.innerHTML = `
+                <div class="text-xs text-white/50">You • just now</div>
+                <div class="inline-block bg-[#7C3AED] px-4 py-2 rounded-3xl text-sm">${input.value}</div>
+            `;
+            window.appendChild(msg);
+            window.scrollTop = window.scrollHeight;
+            input.value = '';
+            
+            // Fake reply
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = 'mb-3';
+                reply.innerHTML = `
+                    <div class="text-xs text-white/50">${name} • just now</div>
+                    <div class="inline-block bg-white/10 px-4 py-2 rounded-3xl text-sm">Got it, thanks! Will action today.</div>
+                `;
+                window.appendChild(reply);
+                window.scrollTop = window.scrollHeight;
+            }, 1200);
+        }
+        
+        function populateKnowledgeBase() {
+            const container = document.getElementById('knowledgeGrid');
+            container.innerHTML = `
+                <div class="border border-white/10 rounded-2xl p-4 hover:bg-white/5 cursor-pointer" onclick="viewKnowledge('sop-001')">
+                    <div class="font-semibold">Standard Operating Procedure: Staff Onboarding</div>
+                    <div class="text-xs text-white/60 mt-1">Updated 3 days ago • 47 pages</div>
+                </div>
+                <div class="border border-white/10 rounded-2xl p-4 hover:bg-white/5 cursor-pointer" onclick="viewKnowledge('compliance-iso')">
+                    <div class="font-semibold">ISO 27001 Compliance Checklist</div>
+                    <div class="text-xs text-white/60 mt-1">Mandatory for all new deployments</div>
+                </div>
+                <div class="border border-white/10 rounded-2xl p-4 hover:bg-white/5 cursor-pointer" onclick="viewKnowledge('au-employment')">
+                    <div class="font-semibold">Australian Employment Law Quick Reference</div>
+                    <div class="text-xs text-white/60 mt-1">Fair Work Ombudsman aligned</div>
+                </div>
+            `;
+        }
+        
+        function filterKnowledge() {
+            // Simple filter simulation
+            console.log('Knowledge base filtered');
+        }
+        
+        function populateRecentTraining() {
+            const container = document.getElementById('recentTraining');
+            container.innerHTML = `
+                <div class="flex justify-between py-2 border-b border-white/10"><span>Leonard Cruz — ISO Security</span><span class="text-emerald-400 text-xs">COMPLETED</span></div>
+                <div class="flex justify-between py-2 border-b border-white/10"><span>Maria Santos — Data Protection</span><span class="text-emerald-400 text-xs">COMPLETED</span></div>
+                <div class="flex justify-between py-2"><span>Axel Rivera — AU Labor Law</span><span class="text-amber-400 text-xs">IN PROGRESS</span></div>
+            `;
+        }
+        
+        function initializeCharts() {
+            // Trend Chart
+            const ctx = document.getElementById('trendChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                        datasets: [{
+                            label: 'Professionals Deployed',
+                            data: [312, 378, 421, 467, 489, 501, 512],
+                            borderColor: '#7C3AED',
+                            tension: 0.4,
+                            fill: false
+                        }, {
+                            label: 'Client Retention %',
+                            data: [94, 95, 96, 97, 98, 98.2, 98.4],
+                            borderColor: '#10b981',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: 'rgba(255,255,255,0.1)' } }, y1: { position: 'right', grid: { drawOnChartArea: false } } } }
+                });
+            }
+            
+            // Savings Chart
+            const savingsCtx = document.getElementById('savingsChart');
+            if (savingsCtx) {
+                new Chart(savingsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Labor Cost', 'Overhead', 'Training', 'Tech'],
+                        datasets: [{
+                            data: [62, 18, 12, 8],
+                            backgroundColor: ['#7C3AED', '#10b981', '#f59e0b', '#3b82f6']
+                        }]
+                    },
+                    options: { cutout: '75%', plugins: { legend: { position: 'right', labels: { color: '#fff' } } } }
+                });
+            }
+            
+            // Utilization
+            const utilCtx = document.getElementById('utilizationChart');
+            if (utilCtx) {
+                new Chart(utilCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['VA', 'Dev', 'Marketing', 'Finance', 'Support'],
+                        datasets: [{
+                            label: 'Utilization %',
+                            data: [94, 87, 81, 96, 79],
+                            backgroundColor: '#7C3AED'
+                        }]
+                    },
+                    options: { responsive: true, scales: { y: { max: 100, grid: { color: 'rgba(255,255,255,0.1)' } } } }
+                });
+            }
+        }
+        
+        function updateTrendChart(type) {
+            showToast(`Switched chart to ${type} view (demo)`);
+        }
+        
+        function viewStaffProfile(id) {
+            const staff = staffData.find(s => s.id === id);
+            if (!staff) return;
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="flex gap-x-5">
+                    <img src="${staff.avatar}" class="w-20 h-20 rounded-3xl object-cover ring-2 ring-purple-500/50">
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-3xl font-bold">${staff.name}</div>
+                                <div class="text-purple-400">${staff.role}</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-4 py-1 text-xs rounded-full ${staff.status === 'Deployed' ? 'bg-emerald-500/30 text-emerald-400' : 'bg-white/10'}">${staff.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 grid grid-cols-2 gap-y-4 text-sm">
+                            <div><span class="text-white/60">Client:</span> <span class="font-semibold">${staff.company}</span></div>
+                            <div><span class="text-white/60">Deployed:</span> <span class="font-semibold">${staff.deployed}</span></div>
+                            <div><span class="text-white/60">Hours MTD:</span> <span class="font-semibold font-mono">${staff.hours}</span></div>
+                            <div><span class="text-white/60">Email:</span> <span class="font-semibold">${staff.email}</span></div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <div class="text-xs text-white/60 mb-2">CORE SKILLS</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${staff.skills.map(skill => `<span class="px-4 py-1 text-xs bg-white/10 rounded-2xl">${skill}</span>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-x-3 mt-8">
+                            <button onclick="messageStaff('${staff.id}'); closeModal();" class="flex-1 py-3 bg-[#7C3AED] text-white rounded-2xl font-semibold">Send Message</button>
+                            <button onclick="redeployStaff('${staff.id}'); closeModal();" class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-2xl font-semibold">Redeploy</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function messageStaff(id) {
+            const staff = staffData.find(s => s.id === id);
+            if (staff) {
+                closeModal();
+                openDMChat(staff.name);
+            }
+        }
+        
+        function deployNewStaff() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="text-center">
+                    <div class="mx-auto w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-plus text-white text-4xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">Deploy New Professional</div>
+                    <div class="text-white/70 mb-8">Match top talent from our vetted pool of 2,400+ Filipino professionals</div>
+                    
+                    <div class="text-left space-y-4">
+                        <div>
+                            <label class="text-xs text-white/60">POSITION / ROLE</label>
+                            <select class="w-full mt-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3">
+                                <option>Virtual Assistant</option>
+                                <option>Senior Software Developer (Node.js)</option>
+                                <option>Marketing Specialist</option>
+                                <option>Finance & Accounting</option>
+                                <option>Customer Success Manager</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-white/60">CLIENT</label>
+                                <select class="w-full mt-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3">
+                                    ${clientsData.map(c => `<option>${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-white/60">START DATE</label>
+                                <input type="date" value="2026-05-12" class="w-full mt-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-x-3">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-white/30 rounded-2xl font-semibold">Cancel</button>
+                        <button onclick="confirmDeployment()" class="flex-1 py-3 bg-gradient-to-r from-[#7C3AED] to-[#C026D3] rounded-2xl font-semibold">Deploy & Notify Team</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function confirmDeployment() {
+            closeModal();
+            showToast("Staff deployment initiated! Onboarding workflow started in Node.js backend.");
+            
+            // Add new staff
+            const newStaff = {
+                id: "new-" + Date.now(),
+                name: "New Professional",
+                role: "Virtual Assistant",
+                status: "Deployed",
+                company: "TechForward AU",
+                avatar: "https://i.pravatar.cc/40?img=65",
+                skills: ["Admin", "Scheduling"],
+                deployed: "Today",
+                hours: 0,
+                email: "new.staff@phillabor.com"
+            };
+            staffData.unshift(newStaff);
+            
+            // Refresh if on staff page
+            if (document.getElementById('section-staff').classList.contains('active')) {
+                populateStaffTable();
+            }
+            
+            // Update dashboard stat
+            const stat = document.querySelector('.metric-value');
+            if (stat) stat.innerText = (parseInt(stat.innerText) + 1);
+        }
+        
+        function viewClient(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div>
+                    <div class="font-bold text-3xl">${client.name}</div>
+                    <div class="text-purple-400">${client.industry}</div>
+                    
+                    <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                        <div class="glass p-4 rounded-2xl"><div class="text-4xl font-bold">${client.staff}</div><div class="text-xs">Staff Deployed</div></div>
+                        <div class="glass p-4 rounded-2xl"><div class="text-4xl font-bold text-emerald-400">${client.savings}</div><div class="text-xs">Cost Savings</div></div>
+                        <div class="glass p-4 rounded-2xl"><div class="text-4xl font-bold">98%</div><div class="text-xs">Satisfaction</div></div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <div class="font-semibold mb-3">Assigned Team</div>
+                        <div class="flex -space-x-2">
+                            ${staffData.slice(0,4).map(s => `<img src="${s.avatar}" class="w-9 h-9 rounded-2xl ring-2 ring-[#1A1433]">`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-x-3">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-white/30 rounded-2xl">Close</button>
+                        <button onclick="messageClient('${client.id}'); closeModal()" class="flex-1 py-3 bg-gradient-to-r from-[#7C3AED] to-purple-600 rounded-2xl">Message Client</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function createNewTask() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="font-bold text-2xl mb-6">Create New Task</div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="text-xs text-white/60">TASK TITLE</label>
+                        <input type="text" value="Prepare Q2 Client Report" class="w-full mt-1 px-4 py-3 bg-white/5 border border-white/20 rounded-2xl">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-white/60">ASSIGN TO</label>
+                            <select class="w-full mt-1 px-4 py-3 bg-white/5 border border-white/20 rounded-2xl">
+                                ${staffData.map(s => `<option>${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/60">CLIENT</label>
+                            <select class="w-full mt-1 px-4 py-3 bg-white/5 border border-white/20 rounded-2xl">
+                                ${clientsData.map(c => `<option>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs text-white/60">ESTIMATED HOURS</label>
+                        <input type="number" value="6" class="w-full mt-1 px-4 py-3 bg-white/5 border border-white/20 rounded-2xl">
+                    </div>
+                </div>
+                
+                <div class="flex gap-x-3 mt-8">
+                    <button onclick="closeModal()" class="flex-1 py-3 border border-white/30 rounded-2xl font-semibold">Cancel</button>
+                    <button onclick="confirmCreateTask()" class="flex-1 py-3 bg-[#7C3AED] rounded-2xl font-semibold">Create & Assign</button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function confirmCreateTask() {
+            closeModal();
+            showToast("New task created and assigned via Node.js backend.");
+            
+            // Add to tasks
+            tasksData.unshift({
+                id: "task-" + Date.now(),
+                title: "Prepare Q2 Client Report",
+                assignedTo: staffData[0].name,
+                status: "todo",
+                priority: "medium",
+                hours: 6,
+                company: clientsData[0].name
+            });
+            
+            if (document.getElementById('section-tasks').classList.contains('active')) {
+                populateKanban();
+            }
+        }
+        
+        function advanceApplicant(id) {
+            showToast("Applicant advanced to next stage. Email + calendar invite sent automatically.");
+            // In real app would update Firestore
+        }
+        
+        function createSupportTicket() {
+            showToast("Support ticket created. Assigned to on-call team.");
+        }
+        
+        function viewTicket(id) {
+            showToast(`Opening ticket ${id}... (full details in real CRM)`);
+        }
+        
+        function viewKnowledge(id) {
+            showToast("Opening knowledge article in new tab (simulated).");
+        }
+        
+        function editWebsitePage() {
+            showToast("Opening visual CMS editor (Next.js + Tailwind live preview).");
+        }
+        
+        function editAIPersona() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="font-bold text-2xl mb-2">Edit Annie AI Persona</div>
+                <div class="text-sm text-white/70 mb-6">Australian English • Neural2-C voice • Powered by Firebase AI</div>
+                
+                <div class="space-y-6 text-sm">
+                    <div>
+                        <label class="text-xs">Welcome Message</label>
+                        <input value="G'day, can I help?" class="mt-1 w-full px-4 py-3 bg-white/5 border border-white/20 rounded-2xl">
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs">Trigger Phrases</label>
+                        <div class="mt-2 text-xs bg-white/5 p-4 rounded-2xl">"cash grab" → "The Smart Way to Outsource! 💕"</div>
+                    </div>
+                </div>
+                
+                <button onclick="closeModal()" class="mt-8 w-full py-3 bg-[#7C3AED] rounded-2xl font-semibold">Save Changes to Firestore</button>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function messageClient(clientId) {
+            showToast("Opening secure client messaging portal...");
+        }
+        
+        function redeployStaff(id) {
+            closeModal();
+            showToast("Redeployment workflow started. New client matching in progress.");
+        }
+        
+        function showInquireModal() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="text-center">
+                    <div class="text-purple-400 text-sm tracking-[3px]">ASCENDIA CRM</div>
+                    <div class="text-4xl font-bold mt-2 mb-4">Ready to scale with elite Filipino talent?</div>
+                    
+                    <div class="text-white/70">Book a 15-minute discovery call with our team.</div>
+                    
+                    <div class="mt-8">
+                        <button onclick="closeModal(); showToast('Calendar booking opened in new tab (demo)')" class="w-full py-4 bg-gradient-to-r from-[#7C3AED] to-[#C026D3] rounded-2xl font-semibold text-lg">BOOK DISCOVERY CALL</button>
+                    </div>
+                    
+                    <div class="text-xs text-white/50 mt-4">Average response time: 14 minutes • AU business hours</div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function openAIAssistant() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="flex items-center gap-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold">Annie • AI Operations Assistant</div>
+                        <div class="text-xs text-emerald-400">Online • Powered by Ascendia Node.js + Gemini</div>
+                    </div>
+                </div>
+                
+                <div class="h-64 bg-white/5 rounded-2xl p-4 overflow-y-auto mb-4 text-sm" id="aiChat">
+                    <div class="mb-4">
+                        <span class="font-semibold">Annie:</span> G'day! How can I help you with Ascendia CRM today? I can check staff utilization, generate reports, or help with deployments.
+                    </div>
+                </div>
+                
+                <div class="flex gap-x-2">
+                    <input type="text" id="aiInput" placeholder="Ask Annie anything..." class="flex-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3 text-sm" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                    <button onclick="sendAIMessage()" class="px-6 bg-emerald-500 rounded-2xl font-semibold">Send</button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                const aiChat = document.getElementById('aiChat');
+                if (aiChat) aiChat.scrollTop = aiChat.scrollHeight;
+            }, 100);
+        }
+        
+        function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const chat = document.getElementById('aiChat');
+            if (!input.value.trim() || !chat) return;
+            
+            const userMsg = document.createElement('div');
+            userMsg.className = 'text-right mb-3';
+            userMsg.innerHTML = `<span class="inline-block bg-[#7C3AED] px-4 py-2 rounded-3xl">${input.value}</span>`;
+            chat.appendChild(userMsg);
+            
+            const query = input.value.toLowerCase();
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+            
+            setTimeout(() => {
+                let response = "Thanks! I've logged that in Firestore and notified the relevant team.";
+                
+                if (query.includes('deploy') || query.includes('staff')) {
+                    response = "I can deploy a new Virtual Assistant to TechForward AU within 48 hours. Shall I start the matching process?";
+                } else if (query.includes('report') || query.includes('analytics')) {
+                    response = "Here's the latest utilization report: 94% average across all teams. Want me to email the PDF?";
+                }
+                
+                const botMsg = document.createElement('div');
+                botMsg.innerHTML = `<span class="font-semibold">Annie:</span> ${response}`;
+                chat.appendChild(botMsg);
+                chat.scrollTop = chat.scrollHeight;
+            }, 900);
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-8 left-1/2 -translate-x-1/2 glass px-8 py-3 rounded-2xl text-sm flex items-center gap-x-3 shadow-2xl z-[200]`;
+            toast.innerHTML = `
+                <i class="fas fa-check-circle text-emerald-400"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2800);
+        }
+        
+        function refreshAllData() {
+            showToast("Syncing with Firestore & Nextcloud...");
+            setTimeout(() => {
+                location.reload(); // In real app would refetch
+            }, 800);
+        }
+        
+        function exportReport(format = 'pdf') {
+            showToast(`Generating ${format.toUpperCase()} report from Firestore data...`);
+            setTimeout(() => {
+                showToast("Report downloaded successfully (demo)");
+            }, 1500);
+        }
+        
+        function filterStaffByRole(role) {
+            // Helper if needed
+        }
+        
+        // ==================== REAL BACKEND INTEGRATION ====================
+        async function loadLiveData() {
+            try {
+                const [staffRes, clientsRes, tasksRes, ticketsRes] = await Promise.all([
+                    fetch('/api/staff'),
+                    fetch('/api/clients'),
+                    fetch('/api/tasks'),
+                    fetch('/api/tickets')
+                ]);
+
+                if (staffRes.ok) {
+                    const liveStaff = await staffRes.json();
+                    if (liveStaff.length > 0) {
+                        staffData = liveStaff;
+                        console.log('%c[Live] Staff data loaded from Firestore', 'color:#10b981');
+                    }
+                }
+
+                if (clientsRes.ok) {
+                    const liveClients = await clientsRes.json();
+                    if (liveClients.length > 0) clientsData = liveClients;
+                }
+
+                if (tasksRes.ok) {
+                    const liveTasks = await tasksRes.json();
+                    if (liveTasks.length > 0) tasksData = liveTasks;
+                }
+
+                if (ticketsRes.ok) {
+                    const liveTickets = await ticketsRes.json();
+                    if (liveTickets.length > 0) ticketsData = liveTickets;
+                }
+
+                // Refresh current view
+                const activeSection = document.querySelector('.section.active');
+                if (activeSection) {
+                    const id = activeSection.id.replace('section-', '');
+                    if (id === 'staff') populateStaffTable();
+                    if (id === 'clients') populateClientsGrid();
+                    if (id === 'tasks') populateKanban();
+                    if (id === 'support') populateSupportTable();
+                }
+            } catch (e) {
+                console.log('%c[Demo Mode] Using local backup data', 'color:#f59e0b');
+            }
+        }
+
+        // Override deploy function to use real backend
+        const originalDeployNewStaff = window.deployNewStaff;
+        window.deployNewStaff = async function() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="text-center">
+                    <div class="mx-auto w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-plus text-white text-4xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">Deploy New Professional</div>
+                    <div class="text-white/70 mb-8">Match top talent from our vetted pool of 2,400+ Filipino professionals</div>
+                    
+                    <div class="text-left space-y-4">
+                        <div>
+                            <label class="text-xs text-white/60">POSITION / ROLE</label>
+                            <select id="deployRole" class="w-full mt-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3">
+                                <option>Virtual Assistant</option>
+                                <option>Senior Software Developer (Node.js)</option>
+                                <option>Marketing Specialist</option>
+                                <option>Finance & Accounting</option>
+                                <option>Customer Success Manager</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs text-white/60">CLIENT</label>
+                            <select id="deployClient" class="w-full mt-1 bg-white/5 border border-white/20 rounded-2xl px-4 py-3">
+                                ${clientsData.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-x-3">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-white/30 rounded-2xl font-semibold">Cancel</button>
+                        <button onclick="confirmRealDeployment()" class="flex-1 py-3 bg-gradient-to-r from-[#7C3AED] to-[#C026D3] rounded-2xl font-semibold">Deploy via Node.js + Firestore</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.confirmRealDeployment = async function() {
+            const role = document.getElementById('deployRole').value;
+            const client = document.getElementById('deployClient').value;
+            
+            closeModal();
+            showToast("Deploying staff via Express + Firebase Admin SDK...");
+
+            try {
+                const res = await fetch('/api/deploy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position: role, client })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    staffData.unshift(data.staff);
+                    showToast("✅ " + data.message);
+                    
+                    // Refresh staff view if open
+                    if (document.getElementById('section-staff').classList.contains('active')) {
+                        populateStaffTable();
+                    }
+                    
+                    // Update dashboard stat
+                    const stat = document.querySelector('.metric-value');
+                    if (stat) stat.innerText = (parseInt(stat.innerText) + 1);
+                }
+            } catch (e) {
+                showToast("Deployment recorded (demo mode)");
+            }
+        };
+
+        // Boot the entire CRM with live data
+        window.onload = async function() {
+            initializeDashboard();
+            await loadLiveData(); // Load from real backend if available
+            
+            // Easter egg
+            let konami = [];
+            const code = [38,38,40,40,37,39,37,39,66,65];
+            document.addEventListener('keydown', function(e) {
+                konami.push(e.keyCode);
+                if (konami.length > 10) konami.shift();
+                if (konami.join(',') === code.join(',')) {
+                    showToast("🚀 Full production deploy mode activated!");
+                    konami = [];
+                }
+            });
+            
+            console.log('%c[Ascendia CRM for Phil Labor] Full-Stack Node.js + Express + Firebase Admin ready', 'color:#7C3AED; font-size:9px');
+        }
+        
+        window.AscendiaCRM = { deployNewStaff, navigateTo, refreshAllData, loadLiveData };
+    </script>
+</body>
+</html>
