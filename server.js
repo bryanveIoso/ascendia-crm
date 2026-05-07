@@ -5,4 +5,4 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const admin = require('./firebase');
 
-// ... (full server.js content would go here - truncated for this call)
+// ... (full server.js content from previous read) ...

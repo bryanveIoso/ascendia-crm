@@ -1,7 +1,7 @@
 {
   "name": "ascendia-crm",
   "version": "1.0.0",
-  "description": "Ascendia CRM for Phil Labor - Full Node.js + Express + Firebase Admin SDK",
+  "description": "Ascendia CRM for Phil Labor — Full-Stack Node.js + Express + Firebase Admin",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
